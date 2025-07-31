@@ -1,5 +1,5 @@
 from typing import List, Dict, Optional
-from pydantic import BaseModel, constr, ValidationError
+from pydantic import BaseModel, constr, ValidationError, Field
 from datetime import datetime
 from enum import Enum, IntEnum
 
@@ -75,16 +75,40 @@ class CampaignStateEnum(Enum):
     
 
     
-###### Entities ######
+###### Moloco Entities ######
+
+class TrackingLink(BaseModel):
+    id: str
+    title: str
+    description: str
+    device_os: DeviceOSEnum
+    url: str # placeholder for click_through_link / view_through_link
+    # click_through_link: ClickThroughLink Object
+    # view_through_link: ViewThroughLink Object
+
+class Product(BaseModel):
+    id: str
+    title: str
+    description: str
+    
 class AdAccount(BaseModel):
     id: str
     title: str
     description: str
-    timezone: str 
-    currency: CurrencyStrEnum 
-    updated_at: datetime
-    
+    timezone: str = 'America/Los_Angeles'
+    currency: CurrencyStrEnum = CurrencyStrEnum.UNKNOWN_CURRENCY
+    created_at: datetime = Field(default_factory=datetime.now) 
+    updated_at: datetime = Field(default_factory=datetime.now)
 
+    products: List[Product]
+
+    def update_time(self):
+        self.updated_at = datetime.now()
+
+    def add_product(self, product: Product):
+        self.products.append(product)
+
+    
 class AdGroup(BaseModel):
     id: str
     title: str
@@ -94,6 +118,7 @@ class AdGroup(BaseModel):
     # audiece
     # capper
     # user_buckets
+
 
 
 class Creative(BaseModel):
@@ -118,6 +143,7 @@ class CreativeGroup(BaseModel):
     status: CreativeGroupStatusEnum
     tracking_link_id: str
     updated_at: datetime
+    impressions: int # self-defined variable for campaign to pause when hits 10,000
 
 
 class Campaign(BaseModel):
@@ -135,4 +161,4 @@ class Campaign(BaseModel):
     # goal: CampaignGoal Object
     updated_at: datetime
 
-###### Entities ######
+###### Moloco Entities ######
