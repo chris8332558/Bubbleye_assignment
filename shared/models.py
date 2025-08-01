@@ -17,59 +17,59 @@ class CountryStrEnum(str, Enum):
     ENG = 'ENG'
     
 class EnablingStateEnum(str, Enum):
-    UNSPECIFIED = 0 
-    ENABLED = 1 
-    DISABLED = 2 
+    UNSPECIFIED = 'UNSPECIFIED'
+    ENABLED = 'ENABLED' 
+    DISABLED = 'DISABLED' 
 
-class AssetKindEnum(Enum):
-    UNKNOWN_ASSET_KIND = 0
-    CREATIVE = 1
-    CSV = 2
-    ASSET_DYNAMIC_CREATIVE = 3
-    FB_PLAYABLE_AD = 4
+class AssetKindStrEnum(str, Enum):
+    UNKNOWN_ASSET_KIND = 'UNKOWN_ASSET_KIND'
+    CREATIVE = 'CREATIVE'
+    CSV = 'CSV'
+    ASSET_DYNAMIC_CREATIVE = 'ASSET_DYNAMIC_CREATIVE'
+    FB_PLAYABLE_AD = 'FB_PLAYABLE_AD'
 
-class CreativeTypeEnum(Enum):
-    UNKNOWN = 0
-    IMAGE = 1
-    VIDEO = 2
-    HTML = 3
+class CreativeTypeStrEnum(str, Enum):
+    UNKNOWN = "UNKNOWN" 
+    IMAGE = "IMAGE" 
+    VIDEO = "VIDEO"
+    HTML = "HTML" 
 
-class CreativeGroupStatusEnum(Enum):
-    UNKNOWN_STATUS = 0
-    DRAFT = 1
-    SUBMITTED = 2
-    REVIEW_NOT_NEEDED = 3
-    UNDER_REVIEW = 4
-    APPROVED = 5
-    DISAPPROVED = 6
+class CreativeGroupStatusStrEnum(str, Enum):
+    UNKNOWN_STATUS = 'UNKNOWN_STATUS'
+    DRAFT = 'DRAFT' 
+    SUBMITTED = 'SUBMITTED' 
+    REVIEW_NOT_NEEDED = 'REVIEW_NOT_NEEDED'
+    UNDER_REVIEW = 'UNDER_REVIEW'
+    APPROVED = 'APPROVED'
+    DISAPPROVED = 'DISAPPROVED'
 
-class CampaignTypeEnum(Enum):
-    UNKNOWN_CAMPAIGN_TYPE = 0
-    GENERIC = 1
-    APP_USER_ACQUISITION = 2
-    APP_REENGAGEMENT = 3
-    WEBSITE_VISIT = 4
-    CTV_GENERIC = 5
-    CTV_APP_USER_ACQUISITION = 6
-    WEB_USER_ACQUISITION = 7
+class CampaignTypeStrEnum(str, Enum):
+    UNKNOWN_CAMPAIGN_TYPE = 'UNKNOWN_CAMPAIGN_TYPE'
+    GENERIC = 'GENERIC'
+    APP_USER_ACQUISITION = 'APP_USER_ACQUISITION'
+    APP_REENGAGEMENT = 'APP_REENGAGEMENT'
+    WEBSITE_VISIT = 'WEBSITE_VISIT'
+    CTV_GENERIC = 'CTV_GENERIC' 
+    CTV_APP_USER_ACQUISITION = 'CTV_APP_USER_ACQUISITION'
+    WEB_USER_ACQUISITION = 'WEB_USER_ACQUISITION'
     
-class DeviceOSEnum(Enum):
-    UNKNOWN_DEVICE_OS = 0
-    ANDROID = 1
-    IOS = 2
-    VERSATILE = 3
-    MOBILE_WEB = 4
+class DeviceOSStrEnum(str, Enum):
+    UNKNOWN_DEVICE_OS = 'UNKNOWN_DEVICE_OS'
+    ANDROID = 'ANDROID'
+    IOS = 'IOS' 
+    VERSATILE = 'VERSATILE'
+    MOBILE_WEB = 'MOBILE_WEB'
     
-class CampaignStateEnum(Enum):
-    UNKNOWN_CAMPAIGN_STATE = 0
-    SUBMITTED = 1
-    READY = 2
-    UPCOMING = 3
-    ACTIVE = 4
-    PAUSED = 5
-    SUSPENDED = 6
-    VIOLATED = 7
-    COMPLETED = 8
+class CampaignStateStrEnum(str, Enum):
+    UNKNOWN_CAMPAIGN_STATE = 'UNKNOWN_CAMPAIGN_STATE'
+    SUBMITTED = 'SUBMITTED'
+    READY = 'READY'
+    UPCOMING = 'UPCOMING'
+    ACTIVE = 'ACTIVE'
+    PAUSED = 'PAUSED'
+    SUSPENDED = 'SUSPENDED'
+    VIOLATED = 'VIOLATED'
+    COMPLETED = 'COMPLETED'
 
 ###### Enums ######
     
@@ -81,7 +81,7 @@ class TrackingLink(BaseModel):
     id: str
     title: str
     description: str
-    device_os: DeviceOSEnum
+    device_os: DeviceOSStrEnum
     url: str # placeholder for click_through_link / view_through_link
     # click_through_link: ClickThroughLink Object
     # view_through_link: ViewThroughLink Object
@@ -99,7 +99,6 @@ class AdAccount(BaseModel):
     currency: CurrencyStrEnum = CurrencyStrEnum.UNKNOWN_CURRENCY
     created_at: datetime = Field(default_factory=datetime.now) 
     updated_at: datetime = Field(default_factory=datetime.now)
-
     products: List[Product]
 
     def update_time(self):
@@ -114,51 +113,62 @@ class AdGroup(BaseModel):
     title: str
     enabling_state: EnablingStateEnum
     creative_group_id: List[str]
-    updated_at: datetime
+    updated_at: datetime = Field(default_factory=datetime.now) 
     # audiece
     # capper
     # user_buckets
+    def update_time(self):
+        self.updated_at = datetime.now()
 
 
 
 class Creative(BaseModel):
     id: str
     title: str
-    enabling_state: EnablingStateEnum
+    enabling_state: EnablingStateEnum = EnablingStateEnum.ENABLED
     # advertiser_info: AdvertiserInfo
-    type: CreativeTypeEnum
-    original_filename: str
+    type: CreativeTypeStrEnum 
+    # original_filename: str
     # image: Image Object
     # video: Video Obejct
     # html: Html Object
-    updated_at: datetime
+    updated_at: datetime = Field(default_factory=datetime.now) 
+    def update_time(self):
+        self.updated_at = datetime.now()
     
 
 class CreativeGroup(BaseModel):
     id: str
     title: str
     description: str
-    enabling_state: EnablingStateEnum
+    enabling_state: EnablingStateEnum = EnablingStateEnum.ENABLED
     creative_ids: List[str]
-    status: CreativeGroupStatusEnum
-    tracking_link_id: str
-    updated_at: datetime
-    impressions: int # self-defined variable for campaign to pause when hits 10,000
+    status: CreativeGroupStatusStrEnum = CreativeGroupStatusStrEnum.SUBMITTED
+    # tracking_link_id: str
+    updated_at: datetime = Field(default_factory=datetime.now) 
+    impressions: int = 0 # self-defined variable for campaign to pause when hits 10,000
+    def update_time(self):
+        self.updated_at = datetime.now()
 
 
 class Campaign(BaseModel):
     id: str
     title: str
-    description: str
-    enabling_state: EnablingStateEnum
-    type: CampaignTypeEnum
-    device_os: DeviceOSEnum
-    state: CampaignStateEnum
-    countries: CountryStrEnum
-    currency: CurrencyStrEnum
+    description: str = ''
+    enabling_state: EnablingStateEnum = EnablingStateEnum.ENABLED
+    # type: CampaignTypeEnum = CampaignTypeEnum.UNKNOWN_CAMPAIGN_TYPE
+    # device_os: DeviceOSEnum
+    state: CampaignStateStrEnum = CampaignStateStrEnum.READY
+    # countries: CountryStrEnum
+    # currency: CurrencyStrEnum
     # schedual: Schedual Object (start time and end time) 
-    tracking_link_id: str
+    tracking_link_id: str = ''
     # goal: CampaignGoal Object
-    updated_at: datetime
+    updated_at: datetime = Field(default_factory=datetime.now)
+    
+    groups: List[CreativeGroup] = []
+    
+    def update_time(self):
+        self.updated_at = datetime.now()
 
 ###### Moloco Entities ######
