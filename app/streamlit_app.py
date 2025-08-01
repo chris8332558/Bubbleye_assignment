@@ -7,7 +7,7 @@ API_URL = "http://localhost:8000"
 
 st.title("Mocking Moloco Ad")
 st.sidebar.title("Ad Creative Manager")
-page = st.sidebar.radio("Navigate", ['Upload Creative', 'Create Group', 'Manage Campaigns', 'Evaluate', "Creatives"])
+page = st.sidebar.radio("Navigate", ['Upload Creative', 'Create Group', 'Manage Campaigns', 'Evaluate', "Creatives", "Creative Groups"])
 
 if page == 'Upload Creative':
     st.header("Upload New Creative")
@@ -24,8 +24,34 @@ if page == 'Upload Creative':
            else:
                st.error(response.text)
 
+elif page == "Create Group":
+    st.header("Create Group")
+    with st.form("creative_group_form"):
+        creatives = requests.get(f"{API_URL}/creatives").json()
+        options = {f"{c['title']} (ID {c['id']})": c['id'] for c in creatives}
+        group_title = st.text_input("Group Title")
+        description = st.text_input("Description")
+        selected = st.multiselect("Select 2 Creatives", list(options.keys()))
+        submitted = st.form_submit_button("Add Group")
+        if submitted and group_title:
+            if len(selected) == 2:
+                data = {"title": group_title, "description": description, "creative_ids": [options[s] for s in selected]}
+                response = requests.post(f"{API_URL}/creative-groups", params=data)
+                if response.ok:
+                    st.success("Group created successfully.")
+                else:
+                    st.error(response.text)
+            else:
+                st.error("Select exactly 2 creatives for a group!")
+
 elif page == "Creatives":
     st.header("Current Creatives")
     response = requests.get(f"{API_URL}/creatives")
+    for i, r in enumerate(response.json()):
+        st.write(f"{i+1}. {r['title']} (ID {r['id']})")
+
+elif page == "Creative Groups":
+    st.header("Current Creative Groups")
+    response = requests.get(f"{API_URL}/creative-groups")
     for i, r in enumerate(response.json()):
         st.write(f"{i+1}. {r['title']} (ID {r['id']})")

@@ -45,6 +45,10 @@ def create_product(ad_account_id: str, id: str, title:str, description: str):
 # TODO: Change to use pydantic BaseModel to use Request Body
 @app.post("/creatives")
 def create_creative(title: str, type: CreativeTypeStrEnum):
+    # Check if a creative with this title already exists
+    if any(creative.title == title for creative in creatives.values()):
+        raise HTTPException(400, f"Creative \"{title}\" already exists") 
+
     new_id=str(uuid.uuid4())
     new_creative = Creative(
         id=new_id, 
@@ -56,6 +60,9 @@ def create_creative(title: str, type: CreativeTypeStrEnum):
     
 @app.post("/creative-groups")
 def create_group(title: str, description: str, creative_ids: List[str] = Query(...)):
+    if any(group.title == title for group in creative_groups.values()):
+        raise HTTPException(400, f"Group \"{title}\" already exists")
+
     for c_id in creatives:
         if c_id not in creatives:
             raise HTTPException(400, "Creative ID not found")
