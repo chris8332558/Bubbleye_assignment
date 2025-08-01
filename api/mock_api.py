@@ -1,3 +1,10 @@
+import sys
+import os
+
+# Add project root to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 from fastapi import FastAPI, HTTPException, Query
 from typing import List, Dict
 from datetime import datetime
@@ -5,6 +12,7 @@ from shared.models import CurrencyStrEnum, CreativeTypeStrEnum, CampaignStateStr
 from shared.models import AdAccount, Product, Creative, CreativeGroup, Campaign
 import uuid
 import uvicorn
+
 
 app = FastAPI()
 
