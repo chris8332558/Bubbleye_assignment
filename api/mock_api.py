@@ -33,6 +33,8 @@ def create_product(ad_account_id: str, id: str, title:str, description: str):
     ad_accounts[ad_account_id].add_product()
     return new_product
     
+
+# TODO: Change to use pydantic BaseModel to use Request Body
 @app.post("/creatives")
 def create_creative(title: str, type: CreativeTypeStrEnum):
     new_id=str(uuid.uuid4())
@@ -42,8 +44,7 @@ def create_creative(title: str, type: CreativeTypeStrEnum):
         type=type 
         )
     creatives[new_id] = new_creative
-    return {"message": "Successfully created a new Creative",
-            "New Creative": new_creative}
+    return new_creative
     
 @app.post("/creative-groups")
 def create_group(title: str, description: str, creative_ids: List[str] = Query(...)):
