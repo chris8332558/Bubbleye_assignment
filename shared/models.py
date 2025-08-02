@@ -77,6 +77,13 @@ class CampaignStateStrEnum(str, Enum):
     
 ###### Moloco Entities ######
 
+class Image(BaseModel):
+    filename: str
+
+class Video(BaseModel):
+    filename: str
+    auto_endcard: bool
+
 class TrackingLink(BaseModel):
     id: str
     title: str
@@ -128,9 +135,9 @@ class Creative(BaseModel):
     enabling_state: EnablingStateEnum = EnablingStateEnum.ENABLED
     # advertiser_info: AdvertiserInfo
     type: CreativeTypeStrEnum 
-    # original_filename: str
-    # image: Image Object
-    # video: Video Obejct
+    filename: str # the filename of the image or video
+    image: Optional[Image] = None
+    video: Optional[Video] = None
     # html: Html Object
     updated_at: datetime = Field(default_factory=datetime.now) 
     def update_time(self):
@@ -150,7 +157,6 @@ class CreativeGroup(BaseModel):
     def update_time(self):
         self.updated_at = datetime.now()
 
-
 class Campaign(BaseModel):
     id: str
     title: str
@@ -158,7 +164,7 @@ class Campaign(BaseModel):
     enabling_state: EnablingStateEnum = EnablingStateEnum.ENABLED
     # type: CampaignTypeEnum = CampaignTypeEnum.UNKNOWN_CAMPAIGN_TYPE
     # device_os: DeviceOSEnum
-    state: CampaignStateStrEnum = CampaignStateStrEnum.READY
+    state: CampaignStateStrEnum = CampaignStateStrEnum.PAUSED
     # countries: CountryStrEnum
     # currency: CurrencyStrEnum
     # schedual: Schedual Object (start time and end time) 
