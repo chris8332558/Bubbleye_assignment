@@ -90,12 +90,19 @@ elif page == "Campaigns":
         for gid in campaign['groups']:
             expander.write(f"{g['title']} ({campaign['impressions'][gid]})" for g in groups if g.get('id') == gid)
 
-        if st.button("Launch/Pause", key=f"launch_{campaign['id']}"):
-            if campaign['state'] == CampaignStateStrEnum.PAUSED:
-                requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.ACTIVE})
-            elif campaign['state'] == CampaignStateStrEnum.ACTIVE:
-                requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.PAUSED})
-            st.rerun()
+        col1, col2= st.columns(2)
+        with col1:
+            if st.button("Launch/Pause", key=f"launch_{campaign['id']}"):
+                if campaign['state'] == CampaignStateStrEnum.PAUSED:
+                    requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.ACTIVE})
+                elif campaign['state'] == CampaignStateStrEnum.ACTIVE:
+                    requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.PAUSED})
+                st.rerun()
+        with col2:
+            if st.button("Reset", key=f"reset_{campaign['id']}"):
+                requests.post(f"{API_URL}/campaigns/{campaign['id']}/reset")
+                st.rerun()
+                st.success(f"Reset {campaign['title']}")
 
     # Refresh button
     if st.button("Refresh", key="Refresh"):

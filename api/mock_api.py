@@ -139,30 +139,16 @@ def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum, bg_task
 
     return the_campaign 
 
+@app.post("/campaigns/{campaign_id}/reset")
+def reset_campaign(campaign_id: str):
+    the_campaign = campaigns[campaign_id]
+    for gid in the_campaign.impressions:
+        the_campaign.impressions[gid] = 0
 
+    return the_campaign
 
 
 # @app.post("/campaigns/{campaign_id}/evaluate")
-
-
-async def accumulate_campaign_impressions(campaign_id: str):
-    if campaign_id not in campaigns:
-        raise HTTPException(404, "Campaign not found")
-    # Simulate impression increment
-    the_campaign = campaigns[campaign_id]
-    while the_campaign.state == CampaignStateStrEnum.ACTIVE:
-        all_complete = True
-        for gid in the_campaign.groups:
-            if the_campaign.impressions[gid] < 10000:
-                increment = random.randint(200, 800)
-                the_campaign.impressions[gid] += increment
-                all_complete = False
-
-        if all_complete:
-            the_campaign.state = CampaignStateStrEnum.PAUSED
-            break
-        
-        await asyncio.sleep(1) 
 
 
 
@@ -180,6 +166,12 @@ def get_groups():
 def get_campaigns():
     return list(campaigns.values())
 
+@app.get("/champions")
+def get_champions():
+    return champions_queue
+
+
+### Helpers ###
 
 def get_creatives_as_dict():
     return creatives
@@ -191,7 +183,34 @@ def get_creative_id_by_title(title: str) -> str | None:
             return creative_id
     return None
 
-    
+async def accumulate_campaign_impressions(campaign_id: str):
+    if campaign_id not in campaigns:
+        raise HTTPException(404, "Campaign not found")
+    # Simulate impression increment
+    the_campaign = campaigns[campaign_id]
+    while the_campaign.state == CampaignStateStrEnum.ACTIVE:
+        all_complete = True
+        for gid in the_campaign.groups:
+            increment = random.randint(200, 800)
+            the_campaign.impressions[gid] += increment
+            if the_campaign.impressions[gid] < 10000:
+                all_complete = False
+
+        if all_complete:
+            the_campaign.state = CampaignStateStrEnum.PAUSED
+            select_champion_from_campaign(the_campaign.id)
+            break
+        
+        await asyncio.sleep(1) 
+
+        
+def select_champion_from_campaign(campaign_id: str):
+    the_campaign = campaigns[campaign_id]
+    the_champion_group = max(the_campaign.impressions, key=the_campaign.impressions.get)
+    if the_champion_group not in champions_queue:
+        champions_queue.append(the_champion_group)
+
+
 if __name__ == "__main__":
     # Add the two good creatives and the good creative group
     create_creative(title='good_creative_1', type=CreativeTypeStrEnum.VIDEO)
