@@ -106,15 +106,18 @@ def create_campaign(title: str, description: str, group_ids: List[str] = Query(.
     campaigns[new_id] = new_campaign
     return new_campaign 
 
-@app.post("/campaigns/{campaign_title}/attach", response_model=Campaign)
-def attach_group_to_campaign(campaign_title: str, group_id: str):
-    if campaign_title not in campaigns:
+@app.post("/campaigns/{campaign_id}/attach", response_model=Campaign)
+def attach_group_to_campaign(campaign_id: str, group_id: str):
+    if campaign_id not in campaigns:
         raise HTTPException(404, "Campaign not found")
     if group_id not in creative_groups:
         raise HTTPException(404, "Group not found")
-    the_campaign = campaigns[campaign_title]
+    the_campaign = campaigns[campaign_id]
+
     if group_id not in the_campaign.groups:
         the_campaign.groups.append(group_id)
+    else:
+        raise HTTPException(404, "Group already in the campaign")
     return the_campaign
 
 @app.get("/creatives", response_model=List[Creative])
