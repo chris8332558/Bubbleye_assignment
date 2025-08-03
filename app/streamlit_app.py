@@ -88,13 +88,15 @@ elif page == "Campaigns":
     for i, campaign in enumerate(campaigns.json()):
         expander = st.expander(f"{i+1}. {campaign['title']} ({campaign['state']})")
         for gid in campaign['groups']:
-            expander.write(f"{g['title']} ({g['impressions']})" for g in groups if g.get('id') == gid)
+            expander.write(f"{g['title']} ({campaign['impressions'][gid]})" for g in groups if g.get('id') == gid)
 
         if st.button("Launch/Pause", key=f"launch_{campaign['id']}"):
             if campaign['state'] == CampaignStateStrEnum.PAUSED:
                 requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.ACTIVE})
-                #st.success(f"Launched campaign: {campaign['title']}")
             elif campaign['state'] == CampaignStateStrEnum.ACTIVE:
                 requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.PAUSED})
-                #st.success(f"Paused campaign: {campaign['title']}")
             st.rerun()
+
+    # Refresh button
+    if st.button("Refresh", key="Refresh"):
+        st.rerun()

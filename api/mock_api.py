@@ -5,13 +5,15 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, BackgroundTasks
 from typing import List, Dict
 from datetime import datetime
 from shared.models import CurrencyStrEnum, CreativeTypeStrEnum, CampaignStateStrEnum
 from shared.models import Video, Image, AdAccount, Product, Creative, CreativeGroup, Campaign
 import uuid
 import uvicorn
+import asyncio
+import random
 
 
 app = FastAPI()
@@ -21,7 +23,9 @@ creatives: Dict[str, Creative] = {} # {uuid4: Creative}
 creative_groups: Dict[str, CreativeGroup] = {} # {uuid4: CreativeGroup}
 campaigns: Dict[str, Campaign] = {} # {uuid4: Campaign}
 
-champions_queue = []
+champions_queue = [] # For the champion creatives
+
+
 
 @app.post("/ad-accounts")
 def create_ad_account(title: str, description: str, timezone: str, currency: CurrencyStrEnum):
@@ -116,22 +120,53 @@ def attach_group_to_campaign(campaign_id: str, group_id: str):
 
     if group_id not in the_campaign.groups:
         the_campaign.groups.append(group_id)
+        the_campaign.impressions[group_id] = 0
     else:
         raise HTTPException(404, "Group already in the campaign")
     return the_campaign
 
 @app.post("/campaigns/{campaign_id}/state")
-def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum):
+def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum, bg_tasks: BackgroundTasks):
     if campaign_id not in campaigns:
         raise HTTPException(404, "Campaign not found")
     
     the_campaign = campaigns[campaign_id]
     the_campaign.state = state 
-        
+
+    if state == CampaignStateStrEnum.ACTIVE:
+        # Start background impression accumulation
+        bg_tasks.add_task(accumulate_campaign_impressions, campaign_id)
+
     return the_campaign 
 
 
-@app.post("/campaigns/{campaign_id}/evaluate")
+
+
+# @app.post("/campaigns/{campaign_id}/evaluate")
+
+
+async def accumulate_campaign_impressions(campaign_id: str):
+    if campaign_id not in campaigns:
+        raise HTTPException(404, "Campaign not found")
+    # Simulate impression increment
+    the_campaign = campaigns[campaign_id]
+    while the_campaign.state == CampaignStateStrEnum.ACTIVE:
+        all_complete = True
+        for gid in the_campaign.groups:
+            if the_campaign.impressions[gid] < 10000:
+                increment = random.randint(200, 800)
+                the_campaign.impressions[gid] += increment
+                all_complete = False
+
+        if all_complete:
+            the_campaign.state = CampaignStateStrEnum.PAUSED
+            break
+        
+        await asyncio.sleep(1) 
+
+
+
+### Getters ###
 
 @app.get("/creatives", response_model=List[Creative])
 def get_creatives():
@@ -158,14 +193,14 @@ def get_creative_id_by_title(title: str) -> str | None:
 
     
 if __name__ == "__main__":
-    # Add a good creative group
+    # Add the two good creatives and the good creative group
     create_creative(title='good_creative_1', type=CreativeTypeStrEnum.VIDEO)
     create_creative(title='good_creative_2', type=CreativeTypeStrEnum.VIDEO)
     good_creative_1_id = get_creative_id_by_title('good_creative_1')
     good_creative_2_id = get_creative_id_by_title('good_creative_2')
     create_group(title='good_creative_group', description='High performance group', creative_ids=[good_creative_1_id, good_creative_2_id])
 
-    # Add one creative testing campaign and two regular campaigns
+    # Add the creative testing campaign and the two regular campaigns
     create_campaign(title='creative_testing_campaign', description='', group_ids=[])
     create_campaign(title='regular_campaign_a', description='', group_ids=[])
     create_campaign(title='regular_campaign_b', description='', group_ids=[])
