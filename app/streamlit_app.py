@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 from api import mock_api
+from shared.models import CurrencyStrEnum, CreativeTypeStrEnum, CampaignStateStrEnum
 
 
 API_URL = "http://localhost:8000"
@@ -78,13 +79,22 @@ elif page == "Creative Groups":
     for i, group in enumerate(groups.json()):
         expander = st.expander(f"{i+1}. {group['title']} (ID {group['id']})")
         for cid in group['creative_ids']:
-            expander.write(item['title'] for item in creatives if item.get('id') == cid)
+            expander.write(c['title'] for c in creatives if c.get('id') == cid)
 
 elif page == "Campaigns":
     st.header("Current Campaigns")
     campaigns = requests.get(f"{API_URL}/campaigns")
     groups = requests.get(f"{API_URL}/creative-groups").json()
     for i, campaign in enumerate(campaigns.json()):
-        expander = st.expander(f"{i+1}. {campaign['title']}")
+        expander = st.expander(f"{i+1}. {campaign['title']} ({campaign['state']})")
         for gid in campaign['groups']:
-            expander.write(item['title'] for item in groups if item.get('id') == gid)
+            expander.write(f"{g['title']} ({g['impressions']})" for g in groups if g.get('id') == gid)
+
+        if st.button("Launch/Pause", key=f"launch_{campaign['id']}"):
+            if campaign['state'] == CampaignStateStrEnum.PAUSED:
+                requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.ACTIVE})
+                #st.success(f"Launched campaign: {campaign['title']}")
+            elif campaign['state'] == CampaignStateStrEnum.ACTIVE:
+                requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.PAUSED})
+                #st.success(f"Paused campaign: {campaign['title']}")
+            st.rerun()

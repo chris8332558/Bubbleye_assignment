@@ -120,6 +120,19 @@ def attach_group_to_campaign(campaign_id: str, group_id: str):
         raise HTTPException(404, "Group already in the campaign")
     return the_campaign
 
+@app.post("/campaigns/{campaign_id}/state")
+def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum):
+    if campaign_id not in campaigns:
+        raise HTTPException(404, "Campaign not found")
+    
+    the_campaign = campaigns[campaign_id]
+    the_campaign.state = state 
+        
+    return the_campaign 
+
+
+@app.post("/campaigns/{campaign_id}/evaluate")
+
 @app.get("/creatives", response_model=List[Creative])
 def get_creatives():
     return list(creatives.values())

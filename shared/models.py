@@ -173,8 +173,18 @@ class Campaign(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
     
     groups: List[CreativeGroup] = []
+    impressions: Dict[str, int] = {} # {group id: num of impression}
     
     def update_time(self):
         self.updated_at = datetime.now()
+
+    def change_state(self, new_state: CampaignStateStrEnum):
+        return self.model_copy(update={"state": new_state})
+
+    def activate(self):
+        return self.change_state(CampaignStateStrEnum.ACTIVE)
+    
+    def pause(self):
+        return self.change_state(CampaignStateStrEnum.PAUSED)
 
 ###### Moloco Entities ######
