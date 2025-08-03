@@ -8,7 +8,9 @@ API_URL = "http://localhost:8000"
 
 st.title("Mocking Moloco Ad")
 st.sidebar.title("Ad Manager")
-page = st.sidebar.radio("Navigate", ['Upload Creative', 'Create Group', 'Manage Campaigns', 'Evaluate', "Creatives", "Creative Groups", "Campaigns"])
+page = st.sidebar.radio("Navigate", ['Upload Creative', 'Create Group', 'Manage Campaigns', 
+                                     'Evaluate', "Creatives", "Creative Groups", "Campaigns",
+                                     "Champion Groups"])
 
 if page == 'Upload Creative':
     st.header("Upload New Creative")
@@ -107,3 +109,11 @@ elif page == "Campaigns":
     # Refresh button
     if st.button("Refresh", key="Refresh"):
         st.rerun()
+
+elif page == "Champion Groups":
+    st.header("Champion Groups")
+    groups = requests.get(f"{API_URL}/creative-groups").json()
+    champion_group_ids = requests.get(f"{API_URL}/champions").json()
+    for i, gid in enumerate(champion_group_ids):
+        st.write(f"{i+1}. {g['title']} (ID {g['id']})" for g in groups if g.get('id') == gid)
+    

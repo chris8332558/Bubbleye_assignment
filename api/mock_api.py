@@ -23,7 +23,7 @@ creatives: Dict[str, Creative] = {} # {uuid4: Creative}
 creative_groups: Dict[str, CreativeGroup] = {} # {uuid4: CreativeGroup}
 campaigns: Dict[str, Campaign] = {} # {uuid4: Campaign}
 
-champions_queue = [] # For the champion creatives
+champions_queue = [] # For the champion groups for future use in the regular campaigns
 
 
 
@@ -171,6 +171,7 @@ def get_champions():
     return champions_queue
 
 
+
 ### Helpers ###
 
 def get_creatives_as_dict():
@@ -191,7 +192,7 @@ async def accumulate_campaign_impressions(campaign_id: str):
     while the_campaign.state == CampaignStateStrEnum.ACTIVE:
         all_complete = True
         for gid in the_campaign.groups:
-            increment = random.randint(200, 800)
+            increment = random.randint(600, 2000)
             the_campaign.impressions[gid] += increment
             if the_campaign.impressions[gid] < 10000:
                 all_complete = False
@@ -202,7 +203,6 @@ async def accumulate_campaign_impressions(campaign_id: str):
             break
         
         await asyncio.sleep(1) 
-
         
 def select_champion_from_campaign(campaign_id: str):
     the_campaign = campaigns[campaign_id]
@@ -211,8 +211,12 @@ def select_champion_from_campaign(campaign_id: str):
         champions_queue.append(the_champion_group)
 
 
+
+
+
+
 if __name__ == "__main__":
-    # Add the two good creatives and the good creative group
+    # Add the two good creatives and use them to create the good creative group
     create_creative(title='good_creative_1', type=CreativeTypeStrEnum.VIDEO)
     create_creative(title='good_creative_2', type=CreativeTypeStrEnum.VIDEO)
     good_creative_1_id = get_creative_id_by_title('good_creative_1')

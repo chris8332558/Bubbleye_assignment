@@ -188,3 +188,7 @@ class Campaign(BaseModel):
         return self.change_state(CampaignStateStrEnum.PAUSED)
 
 ###### Moloco Entities ######
+
+
+class EvaluationResult(BaseModel):
+    champion_groups: List[int]
