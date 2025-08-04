@@ -125,6 +125,21 @@ def attach_group_to_campaign(campaign_id: str, group_id: str):
         raise HTTPException(404, "Group already in the campaign")
     return the_campaign
 
+@app.post("/campaigns/{campaign_id}/remove", response_model=Campaign)
+def remove_group_from_campaign(campaign_id: str, group_id: str):
+    if campaign_id not in campaigns:
+        raise HTTPException(404, "Campaign not found")
+    if group_id not in creative_groups:
+        raise HTTPException(404, "Group not found")
+    the_campaign = campaigns[campaign_id]
+
+    if group_id in the_campaign.groups:
+        the_campaign.groups.remove(group_id)
+        the_campaign.impressions.pop(group_id)
+    else:
+        raise HTTPException(404, "Group is not in the campaign")
+    return the_campaign
+
 @app.post("/campaigns/{campaign_id}/state")
 def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum, bg_tasks: BackgroundTasks):
     if campaign_id not in campaigns:

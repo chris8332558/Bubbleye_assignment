@@ -8,9 +8,17 @@ API_URL = "http://localhost:8000"
 
 st.title("Mocking Moloco Ad")
 st.sidebar.title("Ad Manager")
-page = st.sidebar.radio("Navigate", ['Upload Creative', 'Create Group', 'Manage Campaigns', 
-                                     'Evaluate', "Creatives", "Creative Groups", "Campaigns",
-                                     "Champion Groups"])
+
+page = st.sidebar.radio("Navigate", 
+                         ['Upload Creative', 
+                         'Create Group', 
+                         'Manage Campaigns',
+                         'Creatives', 
+                         'Creative Groups', 
+                         'Campaigns', 
+                         'Champion Groups'
+                         ])
+
 
 if page == 'Upload Creative':
     st.header("Upload New Creative")
@@ -48,25 +56,38 @@ elif page == "Create Group":
                 st.error("Select exactly 2 creatives for a group!")
 
 elif page == 'Manage Campaigns':
-    st.header("Attach Group To Campaigns")
+    st.header("Manage Campaigns")
     groups = requests.get(f"{API_URL}/creative-groups").json()
     group_opts = {f"{g['title']} (id {g['id']})": g['id'] for g in groups}
     campaigns = requests.get(f"{API_URL}/campaigns").json()
     campaign_opts = {f"{c['title']} (id {c['id']})": c['id'] for c in campaigns}
+    campaign_id_opts = {c['id']: c for c in campaigns}
 
     select_campaign_title = st.selectbox("Campaign", list(campaign_opts.keys()))
+    select_campaign_id = campaign_opts[select_campaign_title] 
+    
+    st.write("Groups:")
+    col1, col2 = st.columns(2)
+    for gid in campaign_id_opts[select_campaign_id]['groups']:
+        with col1:
+            st.write(f"{g['title']}" for g in groups if g.get('id') == gid)
+        with col2:
+            if st.button("Remove", key=f"{select_campaign_id}_{gid}"):
+                requests.post(f"{API_URL}/campaigns/{select_campaign_id}/remove", params={"group_id": gid})
+                st.rerun()
+                st.success(f"Removed group")
+
     select_group_title = st.selectbox("Group to Attach", list(group_opts.keys()))
+
     if st.button("Attach Group"):
-        cid = campaign_opts[select_campaign_title]
         gid = group_opts[select_group_title]
-        response = requests.post(f"{API_URL}/campaigns/{cid}/attach", params={"group_id": gid})
+        response = requests.post(f"{API_URL}/campaigns/{select_campaign_id}/attach", params={"group_id": gid})
+        st.rerun()
         if response.ok:
             st.success(f"Group {select_group_title} attached to {select_campaign_title}")
         else:
             st.error(response.text)
 
-    # for i, c in enumerate(campaigns.json()):
-    #     st.write(f"{i+1}. {c['title']} ({c['enabling_state']}) ({c['state']}) (ID {c['id']})")
     
 elif page == "Creatives":
     st.header("Current Creatives")
