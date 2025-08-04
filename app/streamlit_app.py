@@ -100,7 +100,7 @@ elif page == "Creatives":
     st.header("Current Creatives")
     response = requests.get(f"{API_URL}/creatives")
     for i, r in enumerate(response.json()):
-        st.write(f"{i+1}. {r['title']} ({r['filename']}, ID {r['id']})")
+        st.write(f"{i+1}. {r['title']} ({r['filename']}) (ID {r['id']})")
 
 elif page == "Creative Groups":
     st.header("Current Creative Groups")
