@@ -41,7 +41,6 @@ def create_product(ad_account_id: str, id: str, title:str, description: str):
     ad_accounts[ad_account_id].add_product()
     return new_product
     
-
 # TODO: Change to use pydantic BaseModel to use Request Body
 @app.post("/creatives")
 def create_creative(title: str, type: CreativeTypeStrEnum):

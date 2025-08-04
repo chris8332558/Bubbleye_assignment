@@ -58,17 +58,20 @@ elif page == "Create Group":
 elif page == 'Manage Campaigns':
     st.header("Manage Campaigns")
     groups = requests.get(f"{API_URL}/creative-groups").json()
-    group_opts = {f"{g['title']} (id {g['id']})": g['id'] for g in groups}
-    campaigns = requests.get(f"{API_URL}/campaigns").json()
-    campaign_opts = {f"{c['title']} (id {c['id']})": c['id'] for c in campaigns}
-    campaign_id_opts = {c['id']: c for c in campaigns}
+    # group_opts = {f"{g['title']} (id {g['id']})": g['id'] for g in groups}
+    group_opts = {g['id']: g for g in groups}
+    group_title_to_id = {g['title']: g['id'] for g in groups}
 
-    select_campaign_title = st.selectbox("Campaign", list(campaign_opts.keys()))
-    select_campaign_id = campaign_opts[select_campaign_title] 
+    campaigns = requests.get(f"{API_URL}/campaigns").json()
+    campaign_opts = {c['id']: c for c in campaigns}
+    campaign_title_to_id = {c['title']: c['id'] for c in campaigns}
+
+    select_campaign_title = st.selectbox("Campaign", [c['title'] for c in campaign_opts.values()])
+    select_campaign_id = campaign_title_to_id[select_campaign_title] 
     
     st.write("Groups:")
     col1, col2 = st.columns(2)
-    for gid in campaign_id_opts[select_campaign_id]['groups']:
+    for gid in campaign_opts[select_campaign_id]['groups']:
         with col1:
             st.write(f"{g['title']}" for g in groups if g.get('id') == gid)
         with col2:
@@ -77,11 +80,15 @@ elif page == 'Manage Campaigns':
                 st.rerun()
                 st.success(f"Removed group")
 
-    select_group_title = st.selectbox("Group to Attach", list(group_opts.keys()))
+    filtered_group_ids = [g for g in group_opts.keys() if g not in campaign_opts[select_campaign_id]['groups']]
+    filtered_groups = {k: v for k, v in group_opts.items() if k in filtered_group_ids}
+    select_group_title = st.selectbox("Group to Attach", [g['title'] for g in filtered_groups.values()])
+    if select_group_title:
+        select_group_id = group_title_to_id[select_group_title]
+    # select_group_title = st.selectbox("Group to Attach", list(group_opts.keys()))
 
     if st.button("Attach Group"):
-        gid = group_opts[select_group_title]
-        response = requests.post(f"{API_URL}/campaigns/{select_campaign_id}/attach", params={"group_id": gid})
+        response = requests.post(f"{API_URL}/campaigns/{select_campaign_id}/attach", params={"group_id": select_group_id})
         st.rerun()
         if response.ok:
             st.success(f"Group {select_group_title} attached to {select_campaign_title}")
@@ -101,6 +108,7 @@ elif page == "Creative Groups":
     creatives = requests.get(f"{API_URL}/creatives").json()
     for i, group in enumerate(groups.json()):
         expander = st.expander(f"{i+1}. {group['title']} (ID {group['id']})")
+        expander.write("Creatives:")
         for cid in group['creative_ids']:
             expander.write(c['title'] for c in creatives if c.get('id') == cid)
 
