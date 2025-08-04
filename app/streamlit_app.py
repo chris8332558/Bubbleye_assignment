@@ -118,6 +118,7 @@ elif page == "Campaigns":
     groups = requests.get(f"{API_URL}/creative-groups").json()
     for i, campaign in enumerate(campaigns.json()):
         expander = st.expander(f"{i+1}. {campaign['title']} ({campaign['state']})")
+        expander.write("Groups:")
         for gid in campaign['groups']:
             expander.write(f"{g['title']} ({campaign['impressions'][gid]})" for g in groups if g.get('id') == gid)
 
