@@ -46,6 +46,7 @@ elif page == "Create Group":
         submitted = st.form_submit_button("Add Group")
         if submitted and group_title:
             if len(selected) == 2:
+                # Query Parameters for the API call
                 data = {"title": group_title, "description": description, "creative_ids": [options[s] for s in selected]}
                 response = requests.post(f"{API_URL}/creative-groups", params=data)
                 if response.ok:
@@ -68,6 +69,7 @@ elif page == 'Manage Campaigns':
     select_campaign_title = st.selectbox("Campaign", [c['title'] for c in campaign_opts.values()])
     select_campaign_id = campaign_title_to_id[select_campaign_title] 
     
+    # Show the groups in the selected campaign
     st.write("Groups:")
     col1, col2 = st.columns(2)
     for gid in campaign_opts[select_campaign_id]['groups']:
@@ -79,7 +81,7 @@ elif page == 'Manage Campaigns':
                 st.rerun()
                 st.success(f"Removed group")
 
-    # Only shows the groups not in the selected campaign
+    # Only show the groups not in the selected campaign in the selectbox
     filtered_group_ids = [g for g in group_opts.keys() if g not in campaign_opts[select_campaign_id]['groups']]
     filtered_groups = {k: v for k, v in group_opts.items() if k in filtered_group_ids}
     select_group_title = st.selectbox("Group to Attach", [g['title'] for g in filtered_groups.values()])
@@ -96,12 +98,14 @@ elif page == 'Manage Campaigns':
 
     
 elif page == "Creatives":
+    # List the creatives
     st.header("Current Creatives")
     response = requests.get(f"{API_URL}/creatives")
     for i, r in enumerate(response.json()):
         st.write(f"{i+1}. {r['title']} ({r['filename']}) (ID {r['id']})")
 
 elif page == "Creative Groups":
+    # List the Creative Groups
     st.header("Current Creative Groups")
     groups = requests.get(f"{API_URL}/creative-groups")
     creatives = requests.get(f"{API_URL}/creatives").json()
@@ -112,6 +116,7 @@ elif page == "Creative Groups":
             expander.write(c['title'] for c in creatives if c.get('id') == cid)
 
 elif page == "Campaigns":
+    # List the Campaigns, and add Launch/Pause and Reset buttons for each campaign
     st.header("Current Campaigns")
     campaigns = requests.get(f"{API_URL}/campaigns")
     groups = requests.get(f"{API_URL}/creative-groups").json()
@@ -141,6 +146,7 @@ elif page == "Campaigns":
         st.rerun()
 
 elif page == "Champion Groups":
+    # List the champioin creative groups
     st.header("Champion Groups")
     groups = requests.get(f"{API_URL}/creative-groups").json()
     champion_group_ids = requests.get(f"{API_URL}/champions").json()

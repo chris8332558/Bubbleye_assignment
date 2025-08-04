@@ -27,22 +27,58 @@ champions_queue = [] # For the champion groups for future use in the regular cam
 
 ### POSTS ###
 
-@app.post("/ad-accounts")
+@app.post("/ad-accounts", response_model=AdAccount)
 def create_ad_account(title: str, description: str, timezone: str, currency: CurrencyStrEnum):
+    """Create an Ad account. Raise error if its title already exist
+
+    Args:
+        title (str): title for the Ad account
+        description (str): description for the Ad account
+        timezone (str): timezone for the Ad account
+        currency (CurrencyStrEnum): currency for the Ad account
+
+    Returns:
+        The newly created AdAccount
+    """
+    if any(adaccount.title == title for adaccount in ad_accounts.values()):
+        raise HTTPException(400, f"Ad account \"{title}\" already exists")
+
     new_id=str(uuid.uuid4())
     new_ad_account = AdAccount(id=new_id, title=title, description=description, timezone=timezone, currency=currency)
     ad_accounts[new_id] = new_ad_account
     return new_ad_account
 
-@app.post("/products")
-def create_product(ad_account_id: str, id: str, title:str, description: str):
+@app.post("/products", response_model=Product)
+def create_product(ad_account_id: str, title:str, description: str):
+    """Create a new product for an Ad account
+
+    Args:
+        ad_account_id (str): the target Ad account
+        title (str): title for the product
+        description (str): description for the product
+
+    Returns:
+        The newly created Product
+    """
     new_id = str(uuid.uuid4())
     new_product = Product(id=new_id, title=title, description=description)
     ad_accounts[ad_account_id].add_product()
     return new_product
     
-@app.post("/creatives")
+@app.post("/creatives", response_model=Creative)
 def create_creative(title: str, type: CreativeTypeStrEnum):
+    """Create a creative with type of image, video, or html
+
+    Args:
+        title (str): title for the creative
+        type (CreativeTypeStrEnum): Image, Video, or HTML
+
+    Raises:
+        HTTPException: Raise 400 error if the creative title already exists
+
+    Returns:
+        The newly created Creative
+    """
     # Check if a creative with this title already exists
     if any(creative.title == title for creative in creatives.values()):
         raise HTTPException(400, f"Creative \"{title}\" already exists") 
@@ -79,8 +115,22 @@ def create_creative(title: str, type: CreativeTypeStrEnum):
     creatives[new_id] = new_creative
     return new_creative
     
-@app.post("/creative-groups")
+@app.post("/creative-groups", response_model=CreativeGroup)
 def create_group(title: str, description: str, creative_ids: List[str] = Query(...)):
+    """Create a new CreativeGroup
+
+    Args:
+        title (str): title for the creative group
+        description (str): description for the creative group
+        creative_ids (List[str], optional): Creatives to add to this group . Defaults to Query(...).
+
+    Raises:
+        HTTPException: 400 error if the group title already exists
+        HTTPException: 400 error if the creative(s) doesn't exit
+
+    Returns:
+        The newly created CreativeGroup
+    """
     if any(group.title == title for group in creative_groups.values()):
         raise HTTPException(400, f"Group \"{title}\" already exists")
 
@@ -98,8 +148,22 @@ def create_group(title: str, description: str, creative_ids: List[str] = Query(.
     creative_groups[new_id] = new_group
     return new_group
 
-@app.post("/campaigns")
+@app.post("/campaigns", response_model=Campaign)
 def create_campaign(title: str, description: str, group_ids: List[str] = Query(...)):
+    """Create a new Campaign
+
+    Args:
+        title (str): title for the campaign 
+        description (str): description for the campaign
+        group_ids (List[str], optional): Groups to add to the campaign. Defaults to Query(...).
+
+    Raises:
+        HTTPException: 400 error if the campaign title already exists
+        HTTPException: 400 error if the group(s) doesn't exit
+
+    Returns:
+        The newly created Campaign 
+    """
     if any(campaign.title == title for campaign in campaigns.values()):
         raise HTTPException(400, f"Campaign \"{title}\" already exists")
 
@@ -119,39 +183,74 @@ def create_campaign(title: str, description: str, group_ids: List[str] = Query(.
 
 @app.post("/campaigns/{campaign_id}/attach", response_model=Campaign)
 def attach_group_to_campaign(campaign_id: str, group_id: str):
+    """Attach a CreativeGroup to the Campaign
+
+    Args:
+        campaign_id (str): The target campaign id
+        group_id (str): The CreativeGroup id to be attached
+
+    Raises:
+        HTTPException: 400 error if the Campaign doesn't exist
+        HTTPException: 400 error if the CreativeGroup doesn't exist
+        HTTPException: 400 error if the CreativeGroup already in the Campaign
+
+    Returns:
+        The newly created Campaign
+    """
     if campaign_id not in campaigns:
-        raise HTTPException(404, "Campaign not found")
+        raise HTTPException(400, "Campaign not found")
     if group_id not in creative_groups:
-        raise HTTPException(404, "Group not found")
+        raise HTTPException(400, "Group not found")
     the_campaign = campaigns[campaign_id]
 
     if group_id not in the_campaign.groups:
         the_campaign.groups.append(group_id)
         the_campaign.impressions[group_id] = 0
     else:
-        raise HTTPException(404, "Group already in the campaign")
+        raise HTTPException(400, "Group already in the campaign")
     return the_campaign
 
 @app.post("/campaigns/{campaign_id}/remove", response_model=Campaign)
 def remove_group_from_campaign(campaign_id: str, group_id: str):
+    """Remove the CreativeGroup from the Campaign
+
+    Args:
+        campaign_id (str): The target campaign id
+        group_id (str): The CreativeGroup id to be attached
+
+    Raises:
+        HTTPException: 400 error if the Campaign doesn't exist
+        HTTPException: 400 error if the CreativeGroup doesn't exist
+        HTTPException: 400 error if the CreativeGroup is not in the Campaign
+
+    Returns:
+        The target Campaign
+    """
     if campaign_id not in campaigns:
-        raise HTTPException(404, "Campaign not found")
+        raise HTTPException(400, "Campaign not found")
     if group_id not in creative_groups:
-        raise HTTPException(404, "Group not found")
+        raise HTTPException(400, "Group not found")
     the_campaign = campaigns[campaign_id]
 
     if group_id in the_campaign.groups:
         the_campaign.groups.remove(group_id)
         the_campaign.impressions.pop(group_id)
     else:
-        raise HTTPException(404, "Group is not in the campaign")
+        raise HTTPException(400, "Group is not in the campaign")
     return the_campaign
 
-@app.post("/campaigns/{campaign_id}/state")
+@app.post("/campaigns/{campaign_id}/state", response_model=Campaign)
 def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum, bg_tasks: BackgroundTasks):
-    """Switch campaign state. When switch to active, it'll accumulate impressions in the backgroud"""
+    """Switch campaign state. When switch to active, it'll accumulate impressions in the backgroud
+
+    Raises:
+        HTTPException: 400 error if the Campaign doesn't exist
+
+    Returns:
+        The target Campaign
+    """
     if campaign_id not in campaigns:
-        raise HTTPException(404, "Campaign not found")
+        raise HTTPException(400, "Campaign not found")
     
     the_campaign = campaigns[campaign_id]
     the_campaign.state = state 
@@ -162,9 +261,13 @@ def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum, bg_task
 
     return the_campaign 
 
-@app.post("/campaigns/{campaign_id}/reset")
+@app.post("/campaigns/{campaign_id}/reset", response_model=Campaign)
 def reset_campaign(campaign_id: str):
-    """Reset the group impressions to 0"""
+    """Reset the group impressions to 0
+
+    Returns:
+        The target Campaign
+    """
     the_campaign = campaigns[campaign_id]
     for gid in the_campaign.impressions:
         the_campaign.impressions[gid] = 0
@@ -199,20 +302,29 @@ def get_champions():
 ### Helpers ###
 
 def get_creatives_as_dict():
-    """Get creative with {key: value} = {id: Creative object}"""
+    """Get creative with {key: value} = {id: Creative object}
+
+    Returns:
+        Dict[Creatives]: the current creatives
+    """
     return creatives
 
 def get_creative_id_by_title(title: str) -> str | None:
-    """Get creative ID by exact title match"""
+    """Get creative ID by exact title match
+
+    Returns:
+        str: the target creative id or None if it doesn't exist
+    """
     for creative_id, creative in creatives.items():
         if creative.title == title:
             return creative_id
     return None
 
 async def accumulate_campaign_impressions(campaign_id: str):
-    """
-    Simulate impression increment after launching the campaign.
-    The campaign will paused when all its groups reach 10,000 impressions.
+    """Simulate impression increment after launching the campaign. The campaign will paused when all its groups reach 10,000 impressions.
+
+    Raises:
+        HTTPException: 404 error if the campaign doesn't exist.
     """
     if campaign_id not in campaigns:
         raise HTTPException(404, "Campaign not found")
@@ -234,6 +346,11 @@ async def accumulate_campaign_impressions(campaign_id: str):
         await asyncio.sleep(1) 
         
 async def _select_champion_from_campaign(campaign_id: str):
+    """Automatically select the creative group with a highest impression after the campaign paused.
+
+    Args:
+        campaign_id (str): the target campaign id.
+    """
     the_campaign = campaigns[campaign_id]
     the_champion_group = max(the_campaign.impressions, key=the_campaign.impressions.get)
     if the_champion_group not in champions_queue:

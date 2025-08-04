@@ -93,7 +93,9 @@ After the campaign paused when all its creative groups get more than 10,000 impr
 
 
 
-## TODOS
+## Future Works 
 
-1. Use Pydantic BaseModel so that we can call the APIs using Request Body (json file).
-2. Add tests.
+These are some works need to be done:
+
+1. Use Pydantic BaseModel so that we can call the APIs using Request Body (json file), instead of Query Parameters.
+2. Add unit tests.
