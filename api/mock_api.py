@@ -4,12 +4,11 @@ import os
 # Add project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-
 from fastapi import FastAPI, HTTPException, Query, BackgroundTasks
 from typing import List, Dict
 from datetime import datetime
 from shared.models import CurrencyStrEnum, CreativeTypeStrEnum, CampaignStateStrEnum
-from shared.models import Video, Image, AdAccount, Product, Creative, CreativeGroup, Campaign
+from shared.models import Video, Image, HTML, AdAccount, Product, Creative, CreativeGroup, Campaign
 import uuid
 import uvicorn
 import asyncio
@@ -26,6 +25,7 @@ campaigns: Dict[str, Campaign] = {} # {uuid4: Campaign}
 champions_queue = [] # For the champion groups for future use in the regular campaigns
 
 
+### POSTS ###
 
 @app.post("/ad-accounts")
 def create_ad_account(title: str, description: str, timezone: str, currency: CurrencyStrEnum):
@@ -41,7 +41,6 @@ def create_product(ad_account_id: str, id: str, title:str, description: str):
     ad_accounts[ad_account_id].add_product()
     return new_product
     
-# TODO: Change to use pydantic BaseModel to use Request Body
 @app.post("/creatives")
 def create_creative(title: str, type: CreativeTypeStrEnum):
     # Check if a creative with this title already exists
@@ -66,6 +65,15 @@ def create_creative(title: str, type: CreativeTypeStrEnum):
             type=type,
             filename = the_image.filename,
             image=the_image
+            )
+    elif type == CreativeTypeStrEnum.HTML:
+        the_html = HTML(filename=f"{title}.html")
+        new_creative = Creative(
+            id=new_id, 
+            title=title, 
+            type=type,
+            filename = the_html.filename,
+            html=the_html
             )
 
     creatives[new_id] = new_creative
@@ -141,6 +149,7 @@ def remove_group_from_campaign(campaign_id: str, group_id: str):
 
 @app.post("/campaigns/{campaign_id}/state")
 def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum, bg_tasks: BackgroundTasks):
+    """Switch campaign state. When switch to active, it'll accumulate impressions in the backgroud"""
     if campaign_id not in campaigns:
         raise HTTPException(404, "Campaign not found")
     
@@ -155,14 +164,14 @@ def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum, bg_task
 
 @app.post("/campaigns/{campaign_id}/reset")
 def reset_campaign(campaign_id: str):
+    """Reset the group impressions to 0"""
     the_campaign = campaigns[campaign_id]
     for gid in the_campaign.impressions:
         the_campaign.impressions[gid] = 0
 
     return the_campaign
 
-
-# @app.post("/campaigns/{campaign_id}/evaluate")
+### POSTS ###
 
 
 
@@ -184,11 +193,13 @@ def get_campaigns():
 def get_champions():
     return champions_queue
 
+### Getters ###
 
 
 ### Helpers ###
 
 def get_creatives_as_dict():
+    """Get creative with {key: value} = {id: Creative object}"""
     return creatives
 
 def get_creative_id_by_title(title: str) -> str | None:
@@ -199,9 +210,13 @@ def get_creative_id_by_title(title: str) -> str | None:
     return None
 
 async def accumulate_campaign_impressions(campaign_id: str):
+    """
+    Simulate impression increment after launching the campaign.
+    The campaign will paused when all its groups reach 10,000 impressions.
+    """
     if campaign_id not in campaigns:
         raise HTTPException(404, "Campaign not found")
-    # Simulate impression increment
+
     the_campaign = campaigns[campaign_id]
     while the_campaign.state == CampaignStateStrEnum.ACTIVE:
         all_complete = True
@@ -213,19 +228,19 @@ async def accumulate_campaign_impressions(campaign_id: str):
 
         if all_complete:
             the_campaign.state = CampaignStateStrEnum.PAUSED
-            select_champion_from_campaign(the_campaign.id)
+            await _select_champion_from_campaign(the_campaign.id)
             break
         
         await asyncio.sleep(1) 
         
-def select_champion_from_campaign(campaign_id: str):
+async def _select_champion_from_campaign(campaign_id: str):
     the_campaign = campaigns[campaign_id]
     the_champion_group = max(the_campaign.impressions, key=the_campaign.impressions.get)
     if the_champion_group not in champions_queue:
         champions_queue.append(the_champion_group)
 
 
-
+### Helpers ###
 
 
 

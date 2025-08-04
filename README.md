@@ -2,7 +2,17 @@
 Test Project for Bubbleye
 
 
+## Main Dependencies
+
+```
+python==3.13.5
+fastapi==0.116.1
+uvicorn==0.35.0
+streamlit==1.47.1
+```
+
 ## How To Run The App
+
 
 1. Install Packages
     ```bash
@@ -11,16 +21,16 @@ Test Project for Bubbleye
 
 2. Run the server
 
-    Run this command in a terminal
+    Under `Bubbleye_assignment` directory, run this command in a terminal
     ```bash
     python api/mock_api.py
     ```
 
 3. Run the streamlit app
 
-    Run this command in other terminal, and the webpage will show up.
+    Under `Bubbleye_assignment` directory, run this command in other terminal, and the webpage will show up.
     ```bash
-    # You need to change the current path to working directory first
+    # You need to change the current path to be the working directory first
     export PYTHONPATH=$(pwd)
     streamlit run app/streamlit_app.py
     ```
@@ -81,3 +91,9 @@ After the campaign paused when all its creative groups get more than 10,000 impr
 
 ![champion_groups](images/champion_groups.png)
 
+
+
+## TODOS
+
+1. Use Pydantic BaseModel so that we can call the APIs using Request Body (json file).
+2. Add tests.

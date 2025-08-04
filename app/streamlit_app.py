@@ -58,7 +58,6 @@ elif page == "Create Group":
 elif page == 'Manage Campaigns':
     st.header("Manage Campaigns")
     groups = requests.get(f"{API_URL}/creative-groups").json()
-    # group_opts = {f"{g['title']} (id {g['id']})": g['id'] for g in groups}
     group_opts = {g['id']: g for g in groups}
     group_title_to_id = {g['title']: g['id'] for g in groups}
 
@@ -80,12 +79,12 @@ elif page == 'Manage Campaigns':
                 st.rerun()
                 st.success(f"Removed group")
 
+    # Only shows the groups not in the selected campaign
     filtered_group_ids = [g for g in group_opts.keys() if g not in campaign_opts[select_campaign_id]['groups']]
     filtered_groups = {k: v for k, v in group_opts.items() if k in filtered_group_ids}
     select_group_title = st.selectbox("Group to Attach", [g['title'] for g in filtered_groups.values()])
     if select_group_title:
         select_group_id = group_title_to_id[select_group_title]
-    # select_group_title = st.selectbox("Group to Attach", list(group_opts.keys()))
 
     if st.button("Attach Group"):
         response = requests.post(f"{API_URL}/campaigns/{select_campaign_id}/attach", params={"group_id": select_group_id})
@@ -118,7 +117,7 @@ elif page == "Campaigns":
     groups = requests.get(f"{API_URL}/creative-groups").json()
     for i, campaign in enumerate(campaigns.json()):
         expander = st.expander(f"{i+1}. {campaign['title']} ({campaign['state']})")
-        expander.write("Groups:")
+        expander.write("Groups (impressions):")
         for gid in campaign['groups']:
             expander.write(f"{g['title']} ({campaign['impressions'][gid]})" for g in groups if g.get('id') == gid)
 
@@ -133,10 +132,11 @@ elif page == "Campaigns":
         with col2:
             if st.button("Reset", key=f"reset_{campaign['id']}"):
                 requests.post(f"{API_URL}/campaigns/{campaign['id']}/reset")
+                requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.PAUSED})
                 st.rerun()
                 st.success(f"Reset {campaign['title']}")
 
-    # Refresh button
+    # Refresh button for monitoring latest impressions
     if st.button("Refresh", key="Refresh"):
         st.rerun()
 

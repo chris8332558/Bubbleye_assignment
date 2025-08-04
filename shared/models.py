@@ -84,6 +84,9 @@ class Video(BaseModel):
     filename: str
     auto_endcard: bool
 
+class HTML(BaseModel):
+    filename: str
+
 class TrackingLink(BaseModel):
     id: str
     title: str
@@ -113,8 +116,8 @@ class AdAccount(BaseModel):
 
     def add_product(self, product: Product):
         self.products.append(product)
-
     
+
 class AdGroup(BaseModel):
     id: str
     title: str
@@ -128,18 +131,18 @@ class AdGroup(BaseModel):
         self.updated_at = datetime.now()
 
 
-
 class Creative(BaseModel):
     id: str
     title: str
     enabling_state: EnablingStateEnum = EnablingStateEnum.ENABLED
-    # advertiser_info: AdvertiserInfo
     type: CreativeTypeStrEnum 
     filename: str # the filename of the image or video
     image: Optional[Image] = None
     video: Optional[Video] = None
-    # html: Html Object
+    html: Optional[HTML] = None
     updated_at: datetime = Field(default_factory=datetime.now) 
+    # advertiser_info: AdvertiserInfo
+
     def update_time(self):
         self.updated_at = datetime.now()
     
@@ -151,9 +154,10 @@ class CreativeGroup(BaseModel):
     enabling_state: EnablingStateEnum = EnablingStateEnum.ENABLED
     creative_ids: List[str]
     status: CreativeGroupStatusStrEnum = CreativeGroupStatusStrEnum.SUBMITTED
-    # tracking_link_id: str
     updated_at: datetime = Field(default_factory=datetime.now) 
     impressions: int = 0 # self-defined variable for campaign to pause when hits 10,000
+    # tracking_link_id: str
+
     def update_time(self):
         self.updated_at = datetime.now()
 
@@ -162,18 +166,18 @@ class Campaign(BaseModel):
     title: str
     description: str = ''
     enabling_state: EnablingStateEnum = EnablingStateEnum.ENABLED
+    state: CampaignStateStrEnum = CampaignStateStrEnum.PAUSED
+    tracking_link_id: str = ''
+    updated_at: datetime = Field(default_factory=datetime.now)
+    groups: List[CreativeGroup] = []
+    impressions: Dict[str, int] = {} # {group id: num of impression}
+
     # type: CampaignTypeEnum = CampaignTypeEnum.UNKNOWN_CAMPAIGN_TYPE
     # device_os: DeviceOSEnum
-    state: CampaignStateStrEnum = CampaignStateStrEnum.PAUSED
     # countries: CountryStrEnum
     # currency: CurrencyStrEnum
     # schedual: Schedual Object (start time and end time) 
-    tracking_link_id: str = ''
     # goal: CampaignGoal Object
-    updated_at: datetime = Field(default_factory=datetime.now)
-    
-    groups: List[CreativeGroup] = []
-    impressions: Dict[str, int] = {} # {group id: num of impression}
     
     def update_time(self):
         self.updated_at = datetime.now()
@@ -188,7 +192,3 @@ class Campaign(BaseModel):
         return self.change_state(CampaignStateStrEnum.PAUSED)
 
 ###### Moloco Entities ######
-
-
-class EvaluationResult(BaseModel):
-    champion_groups: List[int]
