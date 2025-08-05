@@ -169,7 +169,7 @@ class Campaign(BaseModel):
     state: CampaignStateStrEnum = CampaignStateStrEnum.PAUSED
     tracking_link_id: str = ''
     updated_at: datetime = Field(default_factory=datetime.now)
-    groups: List[CreativeGroup] = []
+    groups: List[str] = [] # group ids
     impressions: Dict[str, int] = {} # {group id: num of impression}
 
     # type: CampaignTypeEnum = CampaignTypeEnum.UNKNOWN_CAMPAIGN_TYPE
