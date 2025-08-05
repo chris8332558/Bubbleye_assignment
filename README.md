@@ -30,8 +30,6 @@ streamlit==1.47.1
 
     Under `Bubbleye_assignment` directory, run this command in other terminal, and the webpage will show up.
     ```bash
-    # You need to change the current path to be the working directory first
-    export PYTHONPATH=$(pwd)
     streamlit run app/streamlit_app.py
     ```
 
