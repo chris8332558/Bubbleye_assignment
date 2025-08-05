@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
-from api import mock_api
-from shared.models import CurrencyStrEnum, CreativeTypeStrEnum, CampaignStateStrEnum
+from shared.models import CampaignStateStrEnum
 
 
 API_URL = "http://localhost:8000"
