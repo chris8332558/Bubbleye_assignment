@@ -47,7 +47,6 @@ You can see the current creatives you have in the `Creatives` page by clicking t
 
 
 
-
 ### Create Creative Groups
 You can create creative groups in the `Create Group` page.
 
@@ -91,9 +90,28 @@ After the campaign paused when all its creative groups get more than 10,000 impr
 
 
 
+## Tests
+
+Using Pytest for testing
+
+1. Install packages for testing
+    ```bash
+    pip install -r requirement-dev.txt
+    ```
+
+2. Run the tests
+    ```bash
+    pytest tests/
+    ```
+
+
+
 ## Future Works 
 
 These are some works need to be done:
 
 1. Use Pydantic BaseModel so that we can call the APIs using Request Body (json file), instead of Query Parameters.
-2. Add unit tests.
+
+2. Add more tests.
+
+3. Add more function in the front end to imporve UI/UX.
