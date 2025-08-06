@@ -47,10 +47,10 @@ elif page == "Create Group":
         options = {f"{c['title']} (ID {c['id']})": c['id'] for c in creatives}
         group_title = st.text_input("Group Title")
         description = st.text_input("Description")
-        selected = st.multiselect("Select 2 Creatives", list(options.keys()))
+        selected = st.multiselect("Select Creatives", list(options.keys()))
         submitted = st.form_submit_button("Add Group")
         if submitted and group_title:
-            if len(selected) == 2:
+            if len(selected) > 0:
                 # Query Parameters for the API call
                 data = {"title": group_title, "description": description, "creative_ids": [options[s] for s in selected]}
                 response = requests.post(f"{API_URL}/creative-groups", params=data)
@@ -59,7 +59,7 @@ elif page == "Create Group":
                 else:
                     st.error(response.text)
             else:
-                st.error("Select exactly 2 creatives for a group!")
+                st.error("Please select creatives for a group!")
 
 elif page == 'Manage Campaigns':
     st.header("Manage Campaigns")
@@ -134,15 +134,18 @@ elif page == "Campaigns":
         col1, col2= st.columns(2)
         with col1:
             if st.button("Launch/Pause", key=f"launch_{campaign['id']}"):
-                if campaign['state'] == CampaignStateStrEnum.PAUSED:
-                    requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.ACTIVE})
+                if len(campaign['groups']) == 0:
+                    st.error("No groups in the campaign")
+                elif campaign['state'] == CampaignStateStrEnum.PAUSED:
+                    requests.post(f"{API_URL}/campaigns/{campaign['id']}/launch")
+                    st.rerun()
                 elif campaign['state'] == CampaignStateStrEnum.ACTIVE:
-                    requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.PAUSED})
-                st.rerun()
+                    requests.post(f"{API_URL}/campaigns/{campaign['id']}/pause")
+                    st.rerun()
         with col2:
             if st.button("Reset", key=f"reset_{campaign['id']}"):
                 requests.post(f"{API_URL}/campaigns/{campaign['id']}/reset")
-                requests.post(f"{API_URL}/campaigns/{campaign['id']}/state", params={"state": CampaignStateStrEnum.PAUSED})
+                requests.post(f"{API_URL}/campaigns/{campaign['id']}/pause")
                 st.rerun()
                 st.success(f"Reset {campaign['title']}")
 

@@ -133,7 +133,7 @@ class AdGroup(BaseModel):
 
 class Creative(BaseModel):
     id: str
-    title: str
+    title: str = Field(..., min_length=1) # title must not be empty
     enabling_state: EnablingStateEnum = EnablingStateEnum.ENABLED
     type: CreativeTypeStrEnum 
     filename: str # the filename of the image or video
@@ -170,7 +170,13 @@ class Campaign(BaseModel):
     tracking_link_id: str = ''
     updated_at: datetime = Field(default_factory=datetime.now)
     groups: List[str] = [] # group ids
+
     impressions: Dict[str, int] = {} # {group id: num of impression}
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.impressions = {gid: 0 for gid in self.groups}
+
 
     # type: CampaignTypeEnum = CampaignTypeEnum.UNKNOWN_CAMPAIGN_TYPE
     # device_os: DeviceOSEnum
@@ -178,6 +184,7 @@ class Campaign(BaseModel):
     # currency: CurrencyStrEnum
     # schedual: Schedual Object (start time and end time) 
     # goal: CampaignGoal Object
+
     
     def update_time(self):
         self.updated_at = datetime.now()

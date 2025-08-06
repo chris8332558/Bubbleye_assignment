@@ -149,7 +149,7 @@ def create_group(title: str, description: str, creative_ids: List[str] = Query(.
     return new_group
 
 @app.post("/campaigns", response_model=Campaign)
-def create_campaign(title: str, description: str, group_ids: List[str] = Query(...)):
+def create_campaign(title: str, description: str, group_ids: List[str] = Query(default=[])):
     """Create a new Campaign
 
     Args:
@@ -176,7 +176,7 @@ def create_campaign(title: str, description: str, group_ids: List[str] = Query(.
         id=new_id,
         title=title,
         description=description,
-        groups_ids=group_ids
+        groups=group_ids,
     )
     campaigns[new_id] = new_campaign
     return new_campaign 
@@ -239,6 +239,51 @@ def remove_group_from_campaign(campaign_id: str, group_id: str):
         raise HTTPException(400, "Group is not in the campaign")
     return the_campaign
 
+@app.post("/campaigns/{campaign_id}/launch", response_model=Campaign)
+def launch_campaign(campaign_id: str, bg_tasks: BackgroundTasks):
+    """Launch the campaign, it'll accumulate impressions in the backgroud
+
+    Raises:
+        HTTPException: 400 error if the Campaign doesn't exist
+        HTTPException: 400 error if the Campaign has no groups
+
+    Returns:
+        The target Campaign
+    """
+    if campaign_id not in campaigns:
+        raise HTTPException(400, "Campaign not found")
+    
+    the_campaign = campaigns[campaign_id]
+    if len(the_campaign.groups) == 0:
+        raise HTTPException(400, "Campaign has no groups")
+
+    the_campaign.state = CampaignStateStrEnum.ACTIVE
+    bg_tasks.add_task(accumulate_campaign_impressions, campaign_id)
+
+    return the_campaign 
+    
+    
+@app.post("/campaigns/{campaign_id}/pause", response_model=Campaign)
+def pause_campaign(campaign_id: str):
+    """Pause the campaign
+
+    Raises:
+        HTTPException: 400 error if the Campaign doesn't exist
+
+    Returns:
+        The target Campaign
+    """
+    if campaign_id not in campaigns:
+        raise HTTPException(400, "Campaign not found")
+    
+    the_campaign = campaigns[campaign_id]
+    if len(the_campaign.groups) == 0:
+        raise HTTPException(400, "Campaign has no groups")
+
+    the_campaign.state = CampaignStateStrEnum.PAUSED
+
+    return the_campaign 
+
 @app.post("/campaigns/{campaign_id}/state", response_model=Campaign)
 def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum, bg_tasks: BackgroundTasks):
     """Switch campaign state. When switch to active, it'll accumulate impressions in the backgroud
@@ -253,6 +298,10 @@ def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum, bg_task
         raise HTTPException(400, "Campaign not found")
     
     the_campaign = campaigns[campaign_id]
+
+    if len(the_campaign.groups) == 0:
+        raise HTTPException(400, "Campaign has no groups")
+
     the_campaign.state = state 
 
     if state == CampaignStateStrEnum.ACTIVE:
