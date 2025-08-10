@@ -50,7 +50,7 @@ You can see the current creatives you have in the `Creatives` page by clicking t
 ### Create Creative Groups
 You can create creative groups in the `Create Group` page.
 
-Type in the `Group Title`, the `Description`, and choose exactly two creatives to attach, and click `Add Group` button.
+Type in the `Group Title`, the `Description`, and choose the creatives to attach, and click `Add Group` button.
 
 ![create_groups](images/create_groups.png)
 
