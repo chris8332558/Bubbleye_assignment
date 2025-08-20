@@ -95,11 +95,11 @@ elif page == 'Manage Campaigns':
 
     if st.button("Attach Group"):
         response = requests.post(f"{API_URL}/campaigns/{select_campaign_id}/attach", params={"group_id": select_group_id})
-        st.rerun()
         if response.ok:
             st.success(f"Group {select_group_title} attached to {select_campaign_title}")
         else:
             st.error(response.text)
+        st.rerun()
 
     
 elif page == "Creatives":
