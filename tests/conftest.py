@@ -4,9 +4,8 @@ from fastapi.testclient import TestClient
 import sys
 import os
 
-# Add backend to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'api'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
+# Add the root directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from api.mock_api import app
 from shared.models import CreativeTypeStrEnum
