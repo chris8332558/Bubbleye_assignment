@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from api.mock_api import app
 from shared.models import CreativeTypeStrEnum
 
+# Use scope="session" so thah there'll be only one instance
 @pytest.fixture(scope="session")
 def client():
     """FastAPI test client fixture"""

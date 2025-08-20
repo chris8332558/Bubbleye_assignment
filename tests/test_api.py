@@ -19,7 +19,7 @@ def test_create_creative_invalid_type(client):
     assert response.status_code == 422 # Validation error
 
 def test_get_creatives_empty(client):
-    """Test getting creatives when none exist"""
+    """Test getting creatives"""
     response = client.get("/creatives")
     assert response.status_code == 200
     # Should return list (might be empty or contain test data)
@@ -30,10 +30,11 @@ def test_create_group(client, sample_creatives):
     portrait, landscape = sample_creatives
     portrait_id = portrait['id']
     landscape_id = landscape['id']
-    response = client.post(f"/creative-groups?title=test_creative_group&description=&creative_ids={portrait_id}&creative_ids={landscape_id}")
+    title = 'test_creative_group'
+    response = client.post(f"/creative-groups?title={title}&description=&creative_ids={portrait_id}&creative_ids={landscape_id}")
     assert response.status_code == 200
     data = response.json()
-    assert data["title"] == "test_creative_group"
+    assert data["title"] == title
     assert len(data["creative_ids"]) == 2
 
 def test_create_group_invalid_creative_id(client):
@@ -55,7 +56,6 @@ def test_create_campaign(client, sample_group):
     response = client.post(f"/campaigns?title=test_create_campaign&description=&group_ids={gid}")
     assert response.status_code == 200
     data = response.json()
-    print(data)
     assert data['title'] == "test_create_campaign"
     assert len(data['groups']) == 1 
 
