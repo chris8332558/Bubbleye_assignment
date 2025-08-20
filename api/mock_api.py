@@ -284,32 +284,6 @@ def pause_campaign(campaign_id: str):
 
     return the_campaign 
 
-@app.post("/campaigns/{campaign_id}/state", response_model=Campaign)
-def switch_campaign_state(campaign_id: str, state: CampaignStateStrEnum, bg_tasks: BackgroundTasks):
-    """Switch campaign state. When switch to active, it'll accumulate impressions in the backgroud
-
-    Raises:
-        HTTPException: 400 error if the Campaign doesn't exist
-
-    Returns:
-        The target Campaign
-    """
-    if campaign_id not in campaigns:
-        raise HTTPException(400, "Campaign not found")
-    
-    the_campaign = campaigns[campaign_id]
-
-    if len(the_campaign.groups) == 0:
-        raise HTTPException(400, "Campaign has no groups")
-
-    the_campaign.state = state 
-
-    if state == CampaignStateStrEnum.ACTIVE:
-        # Start background impression accumulation
-        bg_tasks.add_task(accumulate_campaign_impressions, campaign_id)
-
-    return the_campaign 
-
 @app.post("/campaigns/{campaign_id}/reset", response_model=Campaign)
 def reset_campaign(campaign_id: str):
     """Reset the group impressions to 0
