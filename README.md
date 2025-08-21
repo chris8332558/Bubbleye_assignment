@@ -5,7 +5,7 @@ Test Project for Bubbleye
 ## Main Dependencies
 
 ```
-python==3.13.5
+python==3.11
 fastapi==0.116.1
 uvicorn==0.35.0
 streamlit==1.47.1
